@@ -65,6 +65,8 @@ FAN_SELECT_OP_CODES = {0xA0: FAN_SPEED}
 
 COVER_SELECT_OP_CODES = {0xE0: {OPEN: 0x41, CLOSE: 0x42, STOP: 0x43}}
 
+ALARM_SELECT_OP_CODES = {0xB0: {"disarmed": 0x31, "armed-home": 0x32, "armed-away": 0x33}}
+
 ENL_OP_CODES = {
     0x00: {
         0x11: {
@@ -431,7 +433,25 @@ USER_OPTIONS = {
             {"value": "as_idle", "label": "As Idle"},
         ],
     },
+    0xb0: {
+        "option": "alarm_setting",
+        "option_list": [
+            {"value":"disarmed", "label":"Disarmed"},
+            {"value":"armed-home", "label":"Armed home"},
+            {"value":"armed-away", "label":"Armed away"},
+       ],
+    },
     OPTION_HA_UI_SWING: {"option": OPTION_HA_UI_SWING, "option_list": []},
+}
+
+ALARM_OPTIONS = {
+    0xB0: {"option": "alarm_setting",
+        "option_list": {
+            "disarmed": "Disarmed",
+            "armed-home": "Armed home",
+            "armed-away": "Armed away",
+        },
+    },
 }
 
 TEMP_OPTIONS = {

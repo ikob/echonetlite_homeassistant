@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import Throttle
 from homeassistant.const import Platform
 from homeassistant.exceptions import ConfigEntryNotReady
-from .const import DOMAIN, USER_OPTIONS, TEMP_OPTIONS, CONF_FORCE_POLLING, MISC_OPTIONS
+from .const import DOMAIN, USER_OPTIONS, TEMP_OPTIONS, CONF_FORCE_POLLING, MISC_OPTIONS, ALARM_OPTIONS
 from pychonet.lib.udpserver import UDPServer
 
 from pychonet import ECHONETAPIClient
@@ -115,6 +115,14 @@ _0288_API_CONNECTOR_DEFAULT_FLAGS = [
     ENL_LVSEEM_ENG_UNIT,
 ]
 
+ENL_DETECT_THRESH = 0xB0
+ENL_INVASION = 0xB1
+
+_0002_API_CONNECTOR_DEFAULT_FLAGS = [
+    ENL_STATUS,
+    ENL_DETECT_THRESH,
+    ENL_INVASION,
+]
 
 def polling_update_debug_log(values, eojgc, eojcc):
     debug_log = f"\nECHONETlite polling update data:\n"
@@ -310,6 +318,37 @@ async def update_listener(hass, entry):
                         {option: entry.options.get(option)}
                     )
 
+        if instance["instance"]["eojgc"] == 0x00 and instance["instance"]["eojcc"] == 0x02:
+            for option in ALARM_OPTIONS.keys():
+                if (
+                    entry.options.get(ALARM_OPTIONS[option]["option"]) is not None
+                ):  # check if options has been created
+                    if isinstance(
+                        entry.options.get(ALARM_OPTIONS[option]["option"]), list
+                    ):
+                        if (
+                            len(entry.options.get(ALARM_OPTIONS[option]["option"])) > 0
+                        ):  # if it has been created then check list length.
+                            instance["echonetlite"]._user_options.update(
+                                {
+                                    option: entry.options.get(
+                                        ALARM_OPTIONS[option]["option"]
+                                    )
+                                }
+                            )
+                        else:
+                            instance["echonetlite"]._user_options.update(
+                                {option: False}
+                            )
+                    else:
+                        instance["echonetlite"]._user_options.update(
+                            {option: entry.options.get(ALARM_OPTIONS[option]["option"])}
+                        )
+            for option in TEMP_OPTIONS.keys():
+                if entry.options.get(option) is not None:
+                    instance["echonetlite"]._user_options.update(
+                        {option: entry.options.get(option)}
+                    )
         for key, option in MISC_OPTIONS.items():
             if entry.options.get(key) is not None or option.get("default"):
                 instance["echonetlite"]._user_options.update(
@@ -374,6 +413,11 @@ class ECHONETConnector:
                 f"Starting ECHONETLite LowVoltageSmartElectricEnergyMeter instance at {self._host}"
             )
             flags = _0288_API_CONNECTOR_DEFAULT_FLAGS
+        elif self._eojgc == 0x00 and self._eojcc == 0x02:
+            _LOGGER.debug(
+                f"Starting ECHONETLite CrimePreventionSensor instance at {self._host}"
+            )
+            flags = _0002_API_CONNECTOR_DEFAULT_FLAGS
         else:
             _LOGGER.debug(
                 f"Starting ECHONETLite Generic instance for {self._eojgc}-{self._eojcc}-{self._eojci} at {self._host}"
@@ -420,6 +464,7 @@ class ECHONETConnector:
             "max_temp_cool": 35,
             "min_temp_auto": 15,
             "max_temp_auto": 35,
+            ENL_DETECT_THRESH: False,
         }
         # User selectable options for fan + swing modes for HVAC
         for option in USER_OPTIONS.keys():

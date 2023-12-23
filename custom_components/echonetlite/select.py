@@ -5,6 +5,7 @@ from .const import (
     DOMAIN,
     FAN_SELECT_OP_CODES,
     COVER_SELECT_OP_CODES,
+    ALARM_SELECT_OP_CODES,
     CONF_FORCE_POLLING,
 )
 from pychonet.lib.epc import EPC_CODE
@@ -43,6 +44,24 @@ async def async_setup_entry(hass, config, async_add_entities, discovery_info=Non
                             config,
                             op_code,
                             FAN_SELECT_OP_CODES[op_code],
+                            config.title,
+                        )
+                    )
+        elif (
+            entity["instance"]["eojgc"] == 0 and entity["instance"]["eojcc"] == 2
+        ):  # Alarm
+            _LOGGER.info(
+                f"Crime prevention sensor is detected {config}"
+            )
+            for op_code in entity["instance"]["setmap"]:
+                if op_code in ALARM_SELECT_OP_CODES:
+                    entities.append(
+                        EchonetSelect(
+                            hass,
+                            entity["echonetlite"],
+                            config,
+                            op_code,
+                            ALARM_SELECT_OP_CODES[op_code],
                             config.title,
                         )
                     )
@@ -102,6 +121,12 @@ class EchonetSelect(SelectEntity):
         self._device_name = name
         self._should_poll = True
         self.update_option_listener()
+    
+#    @property
+#    def options(self):
+#        """Options."""
+#        _LOGGER.info(f"call options {self._uid} {self._attr_options}")
+#        return super().options
 
     @property
     def unique_id(self):

@@ -96,6 +96,8 @@ async def async_setup_entry(hass, config, async_add_entities, discovery_info=Non
                     mode_select and ENL_OPENSTATE == op_code
                 ):
                     continue
+                if eojgc == 0x00 and eojcc == 0x02 and op_code == 0xB0:
+                    continue
                 if eojgc in ENL_OP_CODES.keys():
                     if eojcc in ENL_OP_CODES[eojgc].keys():
                         if op_code in ENL_OP_CODES[eojgc][eojcc].keys():
