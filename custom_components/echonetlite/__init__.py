@@ -623,7 +623,7 @@ class ECHONETConnector:
             _enl_super_codes = ENL_SUPER_CODES
         else:
             _enl_super_codes = {
-                k: v for k, v in .items() if not k in ENL_SUPER_ENERGES
+                k: v for k, v in ENL_SUPER_CODES.items() if not k in ENL_SUPER_ENERGES
             }
         flags += list(_enl_super_codes)
         if ((self._eojgc, self._eojcc) == (0x00, 0x02)
